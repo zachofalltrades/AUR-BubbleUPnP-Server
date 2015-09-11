@@ -1,7 +1,6 @@
-# Maintainer: Eric Bond <eric at ericbond dot net>
+# Maintainer: Zach Shelton <mail at zachofalltrades dot net>
 pkgname=bubbleupnpserver
-pkgver=0.7
-pkgver_suffix="-1_all"
+pkgver=0.9
 pkgrel=1
 pkgdesc="Stream UPnP content to Android devices over the Internet"
 arch=('any')
@@ -9,16 +8,16 @@ url="http://www.bubblesoftapps.com/bubbleupnpserver/"
 license=('custom:bubbleupnpserver')
 depends=('jre' 'ffmpeg')
 install=${pkgname}.install
-source=("http://www.bubblesoftapps.com/${pkgname}/${pkgver}/BubbleUPnPServer-${pkgver}.zip" "http://ppa.launchpad.net/bubbleguuum/${pkgname}/ubuntu/pool/main/b/${pkgname}/     ${pkgname}_${pkgver}${pkgver_suffix}.deb")
-noextract=("BubbleUPnPServer-${pkgver}.zip")
-md5sums=('d3eb790bb99523cfcb7b17445da75a8c'
-         '38def880dc7698ac50ca0358a33266a8')
+source=("http://www.bubblesoftapps.com/bubbleupnpserver/BubbleUPnPServer-distrib.zip"
+"${pkgname}.service"
+"${pkgname}.install"
+"${pkgname}.conf"
+"${pkgname}.startd"
+)
+md5sums=('d3eb790bb99523cfcb7b17445da75a8c')
 
 package() {
   cd ${srcdir}
-
-  msg2 "Extracting files..."
-  ar x "${srcdir}/${pkgname}_${pkgver}${pkgver_suffix}.deb" data.tar.gz
   tar xf ${srcdir}/data.tar.gz -C ${pkgdir} --exclude='./etc*'
   tar xf ${srcdir}/data.tar.gz ./etc/default/${pkgname}
   tar xf ${srcdir}/data.tar.gz ./etc/init/${pkgname}.conf
