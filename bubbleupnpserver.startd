@@ -1,0 +1,34 @@
+# Start and stop BubbleUPnP Server.
+
+description "BubbleUPnP Server"
+author "M. Pujos <bubbleguuum@free.fr>"
+
+start on (local-filesystems and net-device-up IFACE!=lo)
+stop on runlevel [!12345]
+respawn
+
+env DEFAULTFILE=/etc/default/bubbleupnpserver
+env COMMAND=/usr/share/bubbleupnpserver/launch.sh
+
+script
+	if [ -f "$DEFAULTFILE" ]; then
+	    . "$DEFAULTFILE"
+	else
+		USER=root
+		DATADIR=/root/.bubbleupnpserver
+		HTTP_PORT=58050
+		HTTPS_PORT=58051
+	fi
+
+	# Make sure daemon is started with system locale
+	if [ -r /etc/default/locale ]; then
+		. /etc/default/locale
+		export LANG
+	fi
+
+	OPTS="-dataDir ${DATADIR} -httpPort ${HTTP_PORT} -httpsPort ${HTTPS_PORT} -nologstdout"
+
+	exec start-stop-daemon --start -c ${USER} --exec ${COMMAND} -- ${OPTS}
+	#exec ${COMMAND} ${OPTS}
+end script
+
