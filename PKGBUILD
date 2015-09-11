@@ -17,15 +17,6 @@ source=("http://www.bubblesoftapps.com/bubbleupnpserver/BubbleUPnPServer-distrib
 md5sums=('d3eb790bb99523cfcb7b17445da75a8c')
 
 package() {
-  cd ${srcdir}
-  tar xf ${srcdir}/data.tar.gz -C ${pkgdir} --exclude='./etc*'
-  tar xf ${srcdir}/data.tar.gz ./etc/default/${pkgname}
-  tar xf ${srcdir}/data.tar.gz ./etc/init/${pkgname}.conf
-  unzip -q "${srcdir}/BubbleUPnPServer-${pkgver}.zip" -d ${pkgdir}/usr/share/${pkgname} -x launch.bat
-
-  msg2 "Shifting some files around..."
-  install -D -m644 ${srcdir}/etc/default/${pkgname} ${pkgdir}/etc/default/${pkgname}
-  install -D -m644 ${pkgdir}/usr/share/${pkgname}/LICENCE.txt ${pkgdir}/usr/share/licenses/${pkgname}/LICENSE
 
   msg2 "Converting upstart script..."
   echo "#!/bin/sh" > ${pkgdir}/usr/share/${pkgname}/${pkgname}.sh
@@ -35,18 +26,10 @@ package() {
     | sed '/^$/N;/^\n$/D' \
     >> ${pkgdir}/usr/share/${pkgname}/${pkgname}.sh
 
-  msg2 "Installing systemd service unit file..."
-  echo "[Unit]
-Description=BubbleUPnP Server
-
-[Service]
-ExecStart=/usr/share/${pkgname}/${pkgname}.sh
-SuccessExitStatus=1 2 SIGKILL
-
-[Install]
-WantedBy=network.target" > ${srcdir}/${pkgname}.service
+  install -D -m644 ${srcdir}/*.jar ${pkgdir}/usr/lib/${pkgname}
+  install -D -m644 ${srcdir}/LICENCE.txt ${pkgdir}/usr/lib/${pkgname}/LICENSE
   install -D -m644 ${srcdir}/${pkgname}.service ${pkgdir}/usr/lib/systemd/system/${pkgname}.service
+  install -D -m644 ${srcdir}/${pkgname}.startd ${pkgdir}/usr/bin/${pkgname}
+  install -D -m644 ${srcdir}/${pkgname}.conf ${pkgdir}/etc/systemd/conf.d/${pkgname}.conf
 
-  msg2 "Making startup scripts executable..."
-  chmod +x ${pkgdir}/usr/share/${pkgname}/{${pkgname},launch}.sh
 }
