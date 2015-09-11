@@ -6,7 +6,7 @@ After=network-online.target
 [Service]
 Type=simple
 Restart=on-failure
-ExecStart=/usr/bin/bubbleupnpserver -dataDir /var/lib/bubbleupnpserver -httpPort 58050 -httpsPort 58051 -nologstdout
+ExecStart=/usr/bin/bubbleupnpserver
 
 [Install]
 WantedBy=multi-user.target
