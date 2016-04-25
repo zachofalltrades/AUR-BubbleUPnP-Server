@@ -29,8 +29,9 @@ package() {
   install -D -m644 ${srcdir}/${pkgname}.service ${pkgdir}/usr/lib/systemd/system/${pkgname}.service
   install -D -m644 ${srcdir}/${pkgname}.conf ${pkgdir}/etc/conf.d/${pkgname}
 
+# custom license file from extracted source...
+  install -D -m644 ${srcdir}/LICENCE.txt ${pkgdir}/usr/share/licenses/${pkgname}/LICENSE
 # package specific library extraction...
-  install -D -m644 ${srcdir}/LICENCE.txt ${pkgdir}/usr/lib/${pkgname}/LICENSE
   install -D -m644 ${srcdir}/*.jar ${pkgdir}/usr/lib/${pkgname}
 
 }
