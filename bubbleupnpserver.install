@@ -1,16 +1,63 @@
 post_install() {
-	echo "
+  get_app_config
+  getent group $RUN_GROUP >/dev/null || groupadd $RUN_GROUP
+  getent passwd $RUN_USER >/dev/null || useradd --comment '$pkgname service account' --gid $RUN_GROUP --home-dir $DATA_DIR --system --no-create-home --shell /bin/false $RUN_USER
+  if [ ! -d $DATA_DIR ]; then
+    mkdir $DATA_DIR;
+    chown -R $RUN_USER:$RUN_GROUP $DATA_DIR
+  fi
+  if [ ! $? -eq 0 ]
+    then
+    echo "WARNING COULDN'T CREATE $RUN_USER USERID, MAKE SURE I HAVE PERMISSON TO DO THAT!"
+      exit 1
+  fi
+chown -R $RUN_USER:users $DATA_DIR
+
+systemctl --system daemon-reload
+  echo "Fixing file permissions...Please be patient."
+usage_instructions
+
+}
+
+get_app_config() {
+  pkgname=bubbleupnpserver
+  RUN_USER=bubble
+  RUN_GROUP=bubble
+  DATA_DIR="/var/lib/$pkgname"
+}
+
+usage_instructions() {
+get_app_config
+  echo "
 ========================================================================
 
+$pkgname runs under systemd using a dedicated service account '$RUN_USER'
+
+systemd services are controlled using 'systemctl' subcommands, most of
+which require elevated permission to execute, although the service itself 
+is run with limited access.
+
+To start $pkgname 
+  # sudo systemctl start $pkgname
+
+To enable $pkgname to automatically start up at boot:
+  # sudo systemctl enable $pkgname
+  
+Check the current status with:
+  # systemctl status $pkgname
+
+To stop $pkgname, you issue the systemctl command:
+  # sudo systemctl stop $pkgname
+
+To restart $pkgname:
+	# systemctl restart $pkgname
+
+Application specific documentation is available at:
+	$url
+	    
 Before starting BubbleUPnP Server, have a look at the default config
-file located at /etc/default/bubbleupnpserver and make sure the defaults
+file located at $DATA_DIR and make sure the defaults
 are OK.
-
-To start BubbleUPnP, you must first enable the service unit file:
-	# systemctl enable bubbleupnpserver
-
-Then start the service:
-	# systemctl start bubbleupnpserver
 
 To complete the configuration once the service has been started, point
 your web browser to:
@@ -18,8 +65,7 @@ your web browser to:
 	        - or -
 	https://localhost:58051
 
-Full documentation is available at:
-	http://www.bubblesoftapps.com/bubbleupnpserver/
+
 
 
 ========================================================================
@@ -27,17 +73,13 @@ Full documentation is available at:
 }
 
 post_upgrade() {
+usage_instructions
+
 	echo "
 ========================================================================
 
-If BubbleUPnP is already running, you need to restart it to finish the
-upgrade.
-
-To restart BubbleUPnP:
-	# systemctl restart bubbleupnpserver
-
-Full documentation is available at:
-	http://www.bubblesoftapps.com/bubbleupnpserver/
+PLEASE NOTE: If BubbleUPnP is already running, you need to restart it to
+finish the upgrade.
 
 ========================================================================
 "
