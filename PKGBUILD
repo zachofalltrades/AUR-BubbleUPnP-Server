@@ -9,7 +9,6 @@ groups=()
 license=('custom:bubbleupnpserver')
 depends=('java-runtime-headless>=7' 'ffmpeg')
 makedepends=('unzip')
-provides=('${pkgname}')
 install=${pkgname}.install
 source=("http://www.bubblesoftapps.com/bubbleupnpserver/BubbleUPnPServer-distrib.zip"
 "${pkgname}.service"
@@ -18,8 +17,8 @@ source=("http://www.bubblesoftapps.com/bubbleupnpserver/BubbleUPnPServer-distrib
 "${pkgname}.sh"
 )
 backup=("etc/conf.d/${pkgname}")
-md5sums=('52e98b77760b5fa59895c92bf96d1d59'
-         '202f4f553306602eb4de63e0aee1a927'
+md5sums=('83e4df8da91f577a138143ceecd6d120'
+         'c43830abe8fd94217989a362ae0e0a43'
          '0176f077669fd050940aac68599c8587'
          'fba049b6a68c180b31e264b521f18042'
          '190d1fa9cf1daa35c57379803194232c')

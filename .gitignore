@@ -1,0 +1,6 @@
+reinstall.sh
+*.xz
+*.zip
+pkg
+src
+
