@@ -1,12 +1,16 @@
 [Unit]
 Description=BubbleUPnP Server
-Requires=network-online.target
-After=network-online.target
 
 [Service]
-Type=simple
+EnvironmentFile=/etc/conf.d/bubbleupnpserver
+WorkingDirectory=/usr/lib/bubbleupnpserver
+User=bubble
+Group=bubble
+RemainAfterExit=true
 Restart=on-failure
 ExecStart=/usr/bin/bubbleupnpserver
 
 [Install]
+WantedBy=network.target
 WantedBy=multi-user.target
+
