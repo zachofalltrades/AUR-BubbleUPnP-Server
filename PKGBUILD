@@ -1,6 +1,6 @@
 # Maintainer: Zach Shelton <mail at zachofalltrades dot net>
 pkgname=bubbleupnpserver
-pkgver=0.9.18
+pkgver=0.9.19
 pkgrel=2
 pkgdesc="Stream UPnP content to Android devices over the Internet"
 arch=('any')
