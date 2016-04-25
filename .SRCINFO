@@ -2,8 +2,8 @@
 # Mon Apr 25 15:14:20 UTC 2016
 pkgbase = bubbleupnpserver
 	pkgdesc = Stream UPnP content to Android devices over the Internet
-	pkgver = 0.9.18
-	pkgrel = 1
+	pkgver = 0.9.19
+	pkgrel = 2
 	url = http://www.bubblesoftapps.com/bubbleupnpserver/
 	install = bubbleupnpserver.install
 	arch = any
