@@ -3,12 +3,12 @@ Description=BubbleUPnP Server
 
 [Service]
 EnvironmentFile=/etc/conf.d/bubbleupnpserver
+ExecStart=/usr/bin/bubbleupnpserver
 WorkingDirectory=/usr/lib/bubbleupnpserver
 User=bubble
 Group=bubble
 RemainAfterExit=true
 Restart=on-failure
-ExecStart=/usr/bin/bubbleupnpserver
 
 [Install]
 WantedBy=network.target

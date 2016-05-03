@@ -1,4 +1,4 @@
-reinstall.sh
+*.gz
 *.xz
 *.zip
 pkg

@@ -1,86 +1,127 @@
-post_install() {
-  get_app_config
-  getent group $RUN_GROUP >/dev/null || groupadd $RUN_GROUP
-  getent passwd $RUN_USER >/dev/null || useradd --comment '$pkgname service account' --gid $RUN_GROUP --home-dir $DATA_DIR --system --no-create-home --shell /bin/false $RUN_USER
-  if [ ! -d $DATA_DIR ]; then
-    mkdir $DATA_DIR;
-    chown -R $RUN_USER:$RUN_GROUP $DATA_DIR
-  fi
-  if [ ! $? -eq 0 ]
-    then
-    echo "WARNING COULDN'T CREATE $RUN_USER USERID, MAKE SURE I HAVE PERMISSON TO DO THAT!"
-      exit 1
-  fi
-chown -R $RUN_USER:users $DATA_DIR
+APP_NAME=bubbleupnpserver
+APP_SERVICE_FILE=/usr/lib/systemd/system/$APP_NAME.service
+APP_CONFIG_FILE=/etc/conf.d/$APP_NAME
+APP_LIB=/usr/lib/$APP_NAME
 
-systemctl --system daemon-reload
-  echo "Fixing file permissions...Please be patient."
-usage_instructions
-
+##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
+## arg 1:  the new package version
+pre_install() {
+  echo 
 }
 
+##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
+## arg 1:  the new package version
+post_install() {
+  get_app_config
+  getent group $APP_GROUP >/dev/null || groupadd $APP_GROUP
+  if [ ! $? -eq 0 ]
+    then
+    echo "FAILED TO CREATE '$APP_GROUP' GROUP"
+      exit 1
+  fi
+  getent passwd $APP_USER >/dev/null || useradd --comment "$APP_NAME service account" --gid $APP_GROUP --home-dir $APP_DATA --system --no-create-home --shell /bin/false $APP_USER
+  if [ ! $? -eq 0 ]
+    then
+    echo "FAILED TO CREATE '$APP_USER' USERID"
+      exit 1
+  fi
+  if [ ! -d $APP_DATA ]; then
+    mkdir $APP_DATA;
+    chown -R $APP_USER:$APP_GROUP $APP_DATA
+  fi
+  
+  app_install_tweaks
+  fix_permissions
+  usage_instructions
+  systemctl --system daemon-reload
+}
+
+##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
+## arg 1:  the new package version
+## arg 2:  the old package version
+pre_upgrade() {
+  echo Stopping $APP_NAME for upgrade process...
+  systemctl stop $APP_NAME
+}
+
+##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
+## arg 1:  the new package version
+## arg 2:  the old package version
+post_upgrade() {
+  fix_permissions
+  systemctl --system daemon-reload
+  usage_instructions
+}
+
+##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
+## arg 1:  the old package version
+pre_remove() {
+  systemctl stop $APP_NAME
+}
+
+##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
+## arg 1:  the old package version
+post_remove() {
+  systemctl --system daemon-reload
+}
+
+##### HELPER FUNCTIONS #####
+
 get_app_config() {
-  pkgname=bubbleupnpserver
-  RUN_USER=bubble
-  RUN_GROUP=bubble
-  DATA_DIR="/var/lib/$pkgname"
+ APP_USER=$(cat $APP_SERVICE_FILE|awk -F= '$1=="User"{print $2}')
+ APP_GROUP=$(cat $APP_SERVICE_FILE|awk -F= '$1=="Group"{print $2}')
+ APP_DATA=$(cat $APP_CONFIG_FILE|awk -F= '$1=="APP_DATA"{print $2}')
+}
+
+fix_permissions() {
+ get_app_config
+ echo "Fixing file permissions..."
+ chown -R $APP_USER:users $APP_DATA
 }
 
 usage_instructions() {
-get_app_config
+  get_app_config
   echo "
-========================================================================
-
-$pkgname runs under systemd using a dedicated service account '$RUN_USER'
+'$APP_NAME' runs with limited access as a service under systemd: 
+ServiceFile    = $APP_SERVICE_FILE
+User           = $APP_USER
+Library        = $APP_LIB
+EnvironemtFile = $APP_CONFIG_FILE
+The 'EnvironmentFile' contains entries that you MAY wish to change:
+APP_DATA       = $APP_DATA
 
 systemd services are controlled using 'systemctl' subcommands, most of
-which require elevated permission to execute, although the service itself 
-is run with limited access.
+which require elevated permission to execute:
+# sudo systemctl start $APP_NAME
+# sudo systemctl stop $APP_NAME
+# sudo systemctl restart $APP_NAME
 
-To start $pkgname 
-  # sudo systemctl start $pkgname
-
-To enable $pkgname to automatically start up at boot:
-  # sudo systemctl enable $pkgname
+To automatically start up at boot:
+# sudo systemctl enable $APP_NAME
   
-Check the current status with:
-  # systemctl status $pkgname
+Check the current status:
+# systemctl status $APP_NAME
+"
+app_instructions
+}
 
-To stop $pkgname, you issue the systemctl command:
-  # sudo systemctl stop $pkgname
+##### CUSTOMIZATION FUNCTIONS #####
 
-To restart $pkgname:
-	# systemctl restart $pkgname
+app_install_tweaks() {
+  get_app_config
+}
 
-Application specific documentation is available at:
-	$url
-	    
-Before starting BubbleUPnP Server, have a look at the default config
-file located at $DATA_DIR and make sure the defaults
-are OK.
-
+app_instructions() {
+echo "
 To complete the configuration once the service has been started, point
 your web browser to:
 	http://localhost:58050
 	        - or -
 	https://localhost:58051
 
+Application specific documentation is available at:
+	http://www.bubblesoftapps.com/bubbleupnpserver/
+	
 
-
-
-========================================================================
-"
-}
-
-post_upgrade() {
-usage_instructions
-
-	echo "
-========================================================================
-
-PLEASE NOTE: If BubbleUPnP is already running, you need to restart it to
-finish the upgrade.
-
-========================================================================
 "
 }
