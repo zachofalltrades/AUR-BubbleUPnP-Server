@@ -1,12 +1,15 @@
 APP_NAME=bubbleupnpserver
+
+# boilerplate path constants
 APP_SERVICE_FILE=/usr/lib/systemd/system/$APP_NAME.service
 APP_CONFIG_FILE=/etc/conf.d/$APP_NAME
 APP_LIB=/usr/lib/$APP_NAME
+APP_SCRIPT=/usr/bin/$APP_NAME
 
 ##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
 ## arg 1:  the new package version
 pre_install() {
-  echo 
+  echo ...
 }
 
 ##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
@@ -30,10 +33,11 @@ post_install() {
     chown -R $APP_USER:$APP_GROUP $APP_DATA
   fi
   
-  app_install_tweaks
-  fix_permissions
-  usage_instructions
+  app_finish_install
   systemctl --system daemon-reload
+  app_permissions
+  systemd_instructions
+  app_instructions
 }
 
 ##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
@@ -48,9 +52,10 @@ pre_upgrade() {
 ## arg 1:  the new package version
 ## arg 2:  the old package version
 post_upgrade() {
-  fix_permissions
   systemctl --system daemon-reload
-  usage_instructions
+  app_permissions
+  systemd_instructions
+  app_instructions
 }
 
 ##  https://wiki.archlinux.org/index.php/PKGBUILD#install 
@@ -63,6 +68,26 @@ pre_remove() {
 ## arg 1:  the old package version
 post_remove() {
   systemctl --system daemon-reload
+  if [ -f $APP_SERVICE_FILE ]; then
+    rm $APP_SERVICE_FILE
+  fi
+  if [ -f $APP_CONFIG_FILE ]; then
+    echo NOTE: EnvironmentFile "'$APP_CONFIG_FILE'" was NOT removed 
+    APP_DATA=$(cat $APP_CONFIG_FILE|awk -F= '$1=="APP_DATA"{print $2}')
+  elif [ -f $APP_CONFIG_FILE.pacsave ]; then
+    echo NOTE: EnvironmentFile was backed up to "'$APP_CONFIG_FILE.pacsave'" 
+    APP_DATA=$(cat $APP_CONFIG_FILE.pacsave|awk -F= '$1=="APP_DATA"{print $2}')
+  fi
+  if [ -f $APP_SCRIPT ]; then
+    rm $APP_SCRIPT
+  fi
+  if [ -d $APP_LIB ]; then
+    rm -R $APP_LIB
+  fi
+  if ([ "$APP_DATA" != '' ] && [ -d $APP_DATA ] ); then
+    echo NOTE: APP_DATA "'$APP_DATA'" was NOT completely removed:
+    ls -lAR $APP_DATA
+  fi
 }
 
 ##### HELPER FUNCTIONS #####
@@ -73,48 +98,48 @@ get_app_config() {
  APP_DATA=$(cat $APP_CONFIG_FILE|awk -F= '$1=="APP_DATA"{print $2}')
 }
 
-fix_permissions() {
- get_app_config
- echo "Fixing file permissions..."
- chown -R $APP_USER:users $APP_DATA
-}
-
-usage_instructions() {
+systemd_instructions() {
   get_app_config
   echo "
-'$APP_NAME' runs with limited access as a service under systemd: 
-ServiceFile    = $APP_SERVICE_FILE
-User           = $APP_USER
-Library        = $APP_LIB
-EnvironemtFile = $APP_CONFIG_FILE
-The 'EnvironmentFile' contains entries that you MAY wish to change:
-APP_DATA       = $APP_DATA
-
+'$APP_NAME' runs with limited privileges as a service under 'systemd'. 
 systemd services are controlled using 'systemctl' subcommands, most of
-which require elevated permission to execute:
-# sudo systemctl start $APP_NAME
-# sudo systemctl stop $APP_NAME
-# sudo systemctl restart $APP_NAME
+which require elevated privileges to execute:
+  sudo systemctl start $APP_NAME
+  sudo systemctl stop $APP_NAME
+  sudo systemctl restart $APP_NAME
+  sudo systemctl enable $APP_NAME   (auto-start up at boot)
+  sudo systemctl disable $APP_NAME  (turn off auto-start up at boot)
+  systemctl status $APP_NAME        (does not require elevated privileges)
 
-To automatically start up at boot:
-# sudo systemctl enable $APP_NAME
-  
-Check the current status:
-# systemctl status $APP_NAME
+'$APP_NAME' systemd configuration:
+  ServiceFile    = $APP_SERVICE_FILE
+  EnvironemtFile = $APP_CONFIG_FILE
+  StartScript    = $APP_SCRIPT
+  LibraryDir     = $APP_LIB
+  User           = $APP_USER
+
+The 'EnvironmentFile' contains entries that you MAY wish to change:
+  APP_DATA       = $APP_DATA
 "
-app_instructions
 }
 
 ##### CUSTOMIZATION FUNCTIONS #####
 
-app_install_tweaks() {
+app_finish_install() {
   get_app_config
 }
 
+app_permissions() {
+ get_app_config
+ echo Fixing file permissions...
+ chown -R $APP_USER:users $APP_DATA
+}
+
+
 app_instructions() {
 echo "
-To complete the configuration once the service has been started, point
-your web browser to:
+To complete the configuration once the service has been started, 
+point your web browser to:
 	http://localhost:58050
 	        - or -
 	https://localhost:58051
